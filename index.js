@@ -1,79 +1,58 @@
 var pizzapi = require('dominos');
+var cardObj = require('./config').cardObj
+var customerObj = require('./config').customerObj
 
-
-var addressObj = {
-    "Street": "329 12th Street",
-    "City": "San Francisco",
-    "Region": "CA",
-    "PostalCode": "94103"
-}
-
-var spike = new pizzapi.Customer(
-    {
-        firstName: 'Spike',
-        lastName: 'Lu',
-        address: addressObj,
-        email: 'bah37@duke.edu',
-        phone: '16264294446'
-    }
-);
+var spike = new pizzapi.Customer(customerObj);
 
 console.log("Initializing order...");
-var order = new pizzapi.Order(
-    {
-        customer: spike,
+var order = new pizzapi.Order({
+    customer: spike,
 
-        //optional set the store ID right away
-        storeID: 7764,
+    storeID: 7764,
 
-        deliveryMethod: 'Carryout' //(or 'Carryout')
-    }
-);
-// right up until here (we think)
+    deliveryMethod: 'Carryout' //('Delivery' or 'Carryout')
+});
+
 console.log("Adding items to order...")
 order.addItem(
-    new pizzapi.Item(
-        {
-            code: 'P_14SCREEN',
-            options: [], // possibly an object
-            quantity: 1,
-        }
-    )
+    new pizzapi.Item({
+        code: 'PINPASCA',
+        options: [],
+        quantity: 1,
+    })
 );
-console.log(order.price.toString())
 
 console.log("Setting up credit card info...")
-var cardNumber = 5275190008198539;
 var cardInfo = new order.PaymentObject();
-// console.log('Customer', order.Amounts);
 cardInfo.Amount = order.Amounts.Customer;
-cardInfo.Number = cardNumber;
-cardInfo.CardType = order.validateCC(cardNumber);
-cardInfo.Expiration = '0320'; // possibly a string?
-cardInfo.SecurityCode = 322;
-cardInfo.PostalCode = 30322; // Billing Zipcode
+cardInfo.Number = cardObj.num;
+cardInfo.CardType = order.validateCC();
+cardInfo.Expiration = cardObj.exp; // possibly a string?
+cardInfo.SecurityCode = cardObj.sec;
+cardInfo.PostalCode = cardObj.zip; // Billing Zipcode
 
 console.log("Adding card to order...");
 order.Payments.push(cardInfo);
 
+console.log(cardInfo);
+console.log('\n');
+console.log(order);
 
 // order.validate(
 //     function(result) {
-//         console.log("Order is Validated");
+//         console.log("Order has been validated...");
 //     }
 // );
 //
-order.price(
-    function(result) {
-        console.log("Order is Priced");
-    }
-);
-
-// console.log('order', order);
+// order.price(
+//     function(result) {
+//         console.log("Order has been priced...");
+//     }
+// );
 //
 // order.place(
 //     function(result) {
-//         console.log("Price is", result.result.Order.Amounts, "\nEstimated Wait Time",result.result.Order.EstimatedWaitMinutes, "minutes");
+//         console.log("Price:", result.result.Order.Amounts.Payment, "\nEstimated wait time:", result.result.Order.EstimatedWaitMinutes, "minutes");
 //         console.log("Order placed!");
 //     }
 // );
