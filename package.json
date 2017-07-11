@@ -10,6 +10,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "dominos": "^2.1.1"
+    "body-parser": "^1.17.2",
+    "dominos": "^2.1.1",
+    "express": "^4.15.3"
   }
 }
