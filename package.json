@@ -14,11 +14,13 @@
     "@slack/client": "^3.10.0",
     "address-validator": "^0.2.2",
     "body-parser": "^1.17.2",
+    "cryptr": "^2.0.0",
     "dominos": "^2.1.1",
     "events": "^1.1.1",
     "express": "^4.15.3",
     "express-handlebars": "^3.0.0",
     "express-validator": "^3.2.1",
+    "mongoose": "^4.11.2",
     "slack-client": "^2.0.6",
     "underscore": "^1.8.3"
   }

@@ -7,6 +7,22 @@ var bot_token = process.env.SLACK_BOT_TOKEN;
 
 var rtm = new RtmClient(bot_token);
 
+
+// mongoose setup
+var mongoose = require('mongoose')
+mongoose.connection.on('error', function() {
+    console.log('Oh no! Could not connect to database.')
+})
+mongoose.connection.on('connected', function() {
+    console.log('Yay! Connected to database in bot.js')
+})
+mongoose.connect(process.env.MONGODB_URI)
+
+var models = require('./models/models')
+var Order = models.Order
+
+
+
 var connected = false
 var address = false
 var name = false
@@ -98,7 +114,7 @@ function dealWithCustomer(response) {
         customer.phone = phoneString
         rtm.sendMessage("What would you like to order?", route)
         orderObj.customer = customer;
-        orderObj = new pizzapi.Order(orderObj);
+        // orderObj = new pizzapi.Order(orderObj);
         payment = true
         order = false
     } else if (payment) {
@@ -119,12 +135,21 @@ function dealWithCustomer(response) {
                 quantity: 1
             }
         ))
+        console.log('ORIGINAL', orderObj);
+        var newOrder = new Order({ slackId: response.user, orderObj: orderObj })
+        newOrder.save(function(err, returnedOrder) {
+            if (err) {
+                console.log('error saving new order', err);
+            } else {
+                rtm.sendMessage("Sounds delicious! Click this link to confirm credit card details: http://localhost:3000/payment/" + response.user, route)
 
-        rtm.sendMessage("Sounds delicious! Click this link to confirm credit card details: http://localhost:3000/payment. Type \"done\" when you\'ve finished entering your information there.", route)
-        placeOrder = true
-        payment = false
+                placeOrder = true
+                payment = false
+            }
+        })
+
     } else if (placeOrder) {
-        var cardObj = require('./app').cardObj
+
         var cardInfo = new orderObj.PaymentObject();
         cardInfo.Amount = orderObj.Amounts.Customer;
         cardInfo.Number = cardObj.num;
@@ -198,5 +223,10 @@ function nearbyStores(address, deliveryMethod){
         }
     );
 }
+
+function replaceAll(str1, str2, total, ignore) {
+   return total.replace(new RegExp(str1.replace(/([\,\!\\\^\$\{\}\[\]\(\)\.\*\+\?\|\<\>\-\&])/g, function(c){return "\\" + c;}), "g"+(ignore?"i":"")), str2);
+};
+
 
 rtm.start();

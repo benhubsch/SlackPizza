@@ -8,10 +8,10 @@
 
 <body>
     <div class="body-text"></div>
-    <form action="/payment" method="post">
+    <form action="/payment/{{slackId}}" method="post">
         <div class="form-container">
             <div class="personal-information">
-                <h1>{{customer}}'s Payment Information</h1>
+                <h1>Payment Information</h1>
             </div> <!-- end of personal-information -->
             <div class="card-wrapper"></div>
             <input id="column-left" type="text" name="first" placeholder="First Name"/>
@@ -19,7 +19,7 @@
             <input id="input-field" required="required" type="text" name="number" placeholder="Card Number"/>
             <input id="column-left" required="required" type="text" name="expiry" placeholder="MM / YY"/>
             <input id="column-right" required="required" type="password" name="cvc" placeholder="CCV"/>
-            <input id="input-field" required="required" type="text" name="zip" placeholder="Zip "/>
+            <input id="input-field" required="required" type="text" name="zip" placeholder="Billing Zip Code"/>
             <input id="input-button" required="required" type="submit" value="Submit"/>
         </form>
     </div>
