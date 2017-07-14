@@ -36,17 +36,12 @@ app.post('/payment', function(req, res) {
         console.log('ERRORS IN POST /PAYMENT', errors);
         res.redirect('/error')
     } else {
-        // var first = req.body.first
-        // var last = req.body.last
-        // var number = req.body.number
-        // var expiry = req.body.expiry
-        // var cvc = req.body.cvc
         cardObj.num = req.body.number.split(' ').join('')
         cardObj.exp = req.body.expiry.split(' / ').join('')
         cardObj.sec = req.body.cvc
         cardObj.zip = req.body.zip
         console.log(cardObj);
-        module.exports = { cardObj };
+        // module.exports = { cardObj };
 
         res.redirect('/success')
     }
@@ -54,7 +49,8 @@ app.post('/payment', function(req, res) {
 })
 
 app.get('/payment', function(req, res) {
-    res.render('payment', {customer: 'Jane'})
+    var formName = ''
+    res.render('payment', {customer: formName})
 })
 
 app.get('/error', function(req, res) {

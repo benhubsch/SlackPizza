@@ -18,7 +18,6 @@ var delivery = false
 var placeOrder = false
 var confirmation = false
 
-var dominosCustomer;
 var customer = {};
 var orderObj = {};
 var deliveryMethod;
@@ -91,13 +90,13 @@ function dealWithCustomer(response) {
     } else if (phone) { // possibly contained in customer info
         var emailString = response.text.split('|')[1]
         customer.email = emailString.substring(0, emailString.length - 1)
-        rtm.sendMessage("Thanks, " + customer.firstName + "! What is your phone number?", route)
+        rtm.sendMessage("Aaaaand what are your digits " + customer.firstName + "? :kissing_heart:", route)
         order = true
         phone = false
     } else if (order) { // possibly contained in customer info
         var phoneString = response.text
         customer.phone = phoneString
-        rtm.sendMessage("What a fantastic phone number! What would you like to order?", route)
+        rtm.sendMessage("What would you like to order?", route)
         orderObj.customer = customer;
         orderObj = new pizzapi.Order(orderObj);
         payment = true
@@ -140,7 +139,7 @@ function dealWithCustomer(response) {
         rtm.sendMessage("Do you want to place your order? (y) or (n)", route)
         confirmation = true
         placeOrder = false
-        console.log(orderObj);
+        // console.log(orderObj);
     } else if (confirmation) {
         if(response.text === 'y'){
             orderObj.validate(function(result) {
