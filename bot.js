@@ -1,14 +1,11 @@
 var RtmClient = require('@slack/client').RtmClient;
 var CLIENT_EVENTS = require('@slack/client').CLIENT_EVENTS;
 var pizzapi = require('dominos');
-var cardObj = require('./config').cardObj
 var validateAddress = require('./geocode').validateAddress
 
 var bot_token = process.env.SLACK_BOT_TOKEN;
 
 var rtm = new RtmClient(bot_token);
-
-let route;
 
 var connected = false
 var address = false
@@ -27,28 +24,7 @@ var orderObj = {};
 var deliveryMethod;
 var myStore;
 var userIDObj = {};
-
-//Pizza functions
-function nearbyStores(address, deliveryMethod){
-    pizzapi.Util.findNearbyStores(
-        address,
-        deliveryMethod,
-        function(storeData){
-            var storeID = storeData.result.Stores[0].StoreID;
-            var myStore = new pizzapi.Store({ID: storeID});
-            orderObj.storeID = storeID;
-            return myStore;
-            // myStore.ID = storeData.result.Stores[0].StoreID;
-            // myStore.getMenu(
-            //     function(storeData){
-            //         // console.log(storeData);
-            //         console.log(storeData.menuByCode["S_PIZBP"]);
-            //         console.log(storeData);
-            //     }
-            // );
-        }
-    );
-}
+var route;
 
 // The client will emit an RTM.AUTHENTICATED event on successful connection, with the `rtm.start` payload
 rtm.on(CLIENT_EVENTS.RTM.AUTHENTICATED, (rtmStartData) => {
@@ -108,7 +84,7 @@ function dealWithCustomer(response) {
         delivery = false
     } else if (email) { // possibly contained in customer info
         orderObj.deliveryMethod = response.text === 'c' ? 'Carryout' : 'Delivery';
-        myStore = nearbyStores(customer.address, order.deliveryMethod);
+        myStore = nearbyStores(customer.address, order.deliveryMethod); // storeID is stored in orderObj
         rtm.sendMessage("Thanks, " + customer.firstName + "! What is your email?", route)
         phone = true
         email = false
@@ -145,12 +121,11 @@ function dealWithCustomer(response) {
             }
         ))
 
-        rtm.sendMessage("Sounds delicious! What is your credit card number?", route)
+        rtm.sendMessage("Sounds delicious! Click this link to confirm credit card details: http://localhost:3000/payment. Type \"done\" when you\'ve finished entering your information there.", route)
         placeOrder = true
         payment = false
     } else if (placeOrder) {
-        console.log('in payment');
-        // orderObj.code = response.text
+        var cardObj = require('./app').cardObj
         var cardInfo = new orderObj.PaymentObject();
         cardInfo.Amount = orderObj.Amounts.Customer;
         cardInfo.Number = cardObj.num;
@@ -168,29 +143,30 @@ function dealWithCustomer(response) {
         console.log(orderObj);
     } else if (confirmation) {
         if(response.text === 'y'){
-            // orderObj.validate(
-            //     function(result) {
-            //         console.log("Order has been validated...");
-            //         orderObj.price(
-            //             function(result) {
-            //                 console.log("Order has been priced...");
-            //                 orderObj.place(
-            //                     function(result) {
-            //                         console.log(result);
-            //                         console.log("Price:", result.result.Order.Amounts.Payment, "\nEstimated wait time:", result.result.Order.EstimatedWaitMinutes, "minutes");
-            //                         console.log("Order placed!");
-            //                         pizzapi.Track.byPhone(
-            //                             customer.phone,
-            //                             function(pizzaData){
-            //                                 console.log(pizzaData);
-            //                             }
-            //                         );
-            //                     }
-            //                 );
-            //             }
-            //         );
-            //     }
-            // );
+            orderObj.validate(function(result) {
+                    console.log("Order has been validated...");
+                }
+            );
+
+            orderObj.price(function(result) {
+                    console.log("Order has been priced...");
+                }
+            );
+
+            orderObj.place(function(result) {
+                var waitMessage = deliveryMethod === 'Delivery' ? 'Your food will be delivered in ' : 'Your food will be ready for pickup in '
+                rtm.sendMessage("Total price came out to:" + result.result.Order.Amounts.Payment, route)
+                rtm.sendMessage(waitMessage + result.result.Order.EstimatedWaitMinutes + ' minutes', route)
+                rtm.sendMessage('Thanks for ordering with us! We hope you order again soon! :heart: ', route)
+                console.log('Order has been placed...', result);
+                    // pizzapi.Track.byPhone(
+                    //     customer.phone,
+                    //     function(pizzaData){
+                    //         console.log(pizzaData);
+                    //     }
+                    // );
+                }
+            );
 
             rtm.sendMessage("Congratulations! You just ordered Dominos!", route)
         } else {
@@ -208,6 +184,20 @@ function buildDM(idArr) {
         userIDObj[userId] = dm
     }
     console.log(userIDObj);
+}
+
+//Pizza functions
+function nearbyStores(address, deliveryMethod){
+    pizzapi.Util.findNearbyStores(
+        address,
+        deliveryMethod,
+        function(storeData){
+            var storeID = storeData.result.Stores[0].StoreID;
+            var myStore = new pizzapi.Store({ID: storeID});
+            orderObj.storeID = storeID;
+            return myStore;
+        }
+    );
 }
 
 rtm.start();
