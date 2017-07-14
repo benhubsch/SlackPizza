@@ -13,6 +13,8 @@
     "@google/maps": "^0.4.2",
     "@slack/client": "^3.10.0",
     "address-validator": "^0.2.2",
+    "apiai": "^4.0.3",
+    "axios": "^0.16.2",
     "body-parser": "^1.17.2",
     "cryptr": "^2.0.0",
     "dominos": "^2.1.1",
