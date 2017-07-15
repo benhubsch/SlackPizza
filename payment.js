@@ -82,7 +82,7 @@ app.post('/payment/:slackId', function(req, res) {
                 var orderObj = new pizzapi.Order(orderObj)
                 for (var i=0; i < codeArr.length; i++) {
                     orderObj.addItem(new pizzapi.Item({
-                            code: 'PINPASCA',
+                            code: codeArr[i],
                             options: [],
                             quantity: 1
                         })
