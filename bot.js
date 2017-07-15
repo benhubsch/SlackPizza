@@ -171,7 +171,7 @@ function dealWithCustomer(response) {
         } else if (! botParams.delivery) {
             botParams[lastPrompt] = response.text
 
-            var delRes = ['Would you like this delivered or would you like to pick it up in person?', 'Will you be eating this at home or in store?'][Math.floor(Math.random() * 2)]
+            var delRes = ['Would you like this delivered or would you like to pick it up in person?', 'Will you be eating this at home or in store?'][0]
             lastPrompt = 'delivery'
             botParams.delivery = true
             rtm.sendMessage(delRes, route)
@@ -204,7 +204,7 @@ function dealWithCustomer(response) {
 
                 findNearby(botParams.address).then(function(menuNearest) {
                     var matchedItem = bestMatch(finalOrder, menuNearest)[0]
-
+                    console.log(bestMatch(finalOrder, menuNearest))
                     foodNameArr.push(matchedItem.Name)
                     foodCodeArr.push(matchedItem.Code)
 
