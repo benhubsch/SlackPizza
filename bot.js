@@ -20,6 +20,10 @@ mongoose.connect(process.env.MONGODB_URI)
 
 var models = require('./models/models')
 var Order = models.Order
+<<<<<<< HEAD
+=======
+var PaymentPage = models.PaymentPage
+>>>>>>> master
 
 
 
@@ -70,7 +74,10 @@ rtm.on(CLIENT_EVENTS.RTM.RTM_CONNECTION_OPENED, function () {
 function dealWithCustomer(response) {
 
     if (response.text.toLowerCase().indexOf('pizzabot') >= 0 && connected) {
+<<<<<<< HEAD
         // console.log(response);
+=======
+>>>>>>> master
         route = userIDObj[response.user]
 
         rtm.sendMessage("So you want to order a pizza, huh? What's your address?", route);
@@ -114,11 +121,15 @@ function dealWithCustomer(response) {
         customer.phone = phoneString
         rtm.sendMessage("What would you like to order?", route)
         orderObj.customer = customer;
+<<<<<<< HEAD
         // orderObj = new pizzapi.Order(orderObj);
+=======
+>>>>>>> master
         payment = true
         order = false
     } else if (payment) {
         // orderObj.code = response.text
+<<<<<<< HEAD
         // push everything onto an array
         orderObj.addItem(new pizzapi.Item(
             {
@@ -146,6 +157,28 @@ function dealWithCustomer(response) {
                 placeOrder = true
                 payment = false
             }
+=======
+        // integrate Spike's menu comparison here
+        var codeArr = ['S_PIZPH', 'S_PIZZA']
+
+        var newPaymentPage = new PaymentPage({ slackId: response.user, foodArr: ['Pepperoni Pizza', 'BBQ Wings'], firstName: customer.firstName})
+        newPaymentPage.save(function(err) {
+            if (err) {
+                console.log('error saving new payment page', err);
+            }
+        })
+
+        var newOrder = new Order({ slackId: response.user, codeArr: codeArr, orderObj: orderObj })
+        newOrder.save(function(err, returnedOrder) {
+            if (err) {
+                console.log('error saving new order', err);
+            } else {
+                rtm.sendMessage("Sounds delicious! Click this link to confirm credit card details: http://localhost:3000/payment/" + response.user, route)
+
+                placeOrder = true
+                payment = false
+            }
+>>>>>>> master
         })
 
     } else if (placeOrder) {
@@ -164,7 +197,10 @@ function dealWithCustomer(response) {
         rtm.sendMessage("Do you want to place your order? (y) or (n)", route)
         confirmation = true
         placeOrder = false
+<<<<<<< HEAD
         // console.log(orderObj);
+=======
+>>>>>>> master
     } else if (confirmation) {
         if(response.text === 'y'){
             orderObj.validate(function(result) {
@@ -183,12 +219,15 @@ function dealWithCustomer(response) {
                 rtm.sendMessage(waitMessage + result.result.Order.EstimatedWaitMinutes + ' minutes', route)
                 rtm.sendMessage('Thanks for ordering with us! We hope you order again soon! :heart: ', route)
                 console.log('Order has been placed...', result);
+<<<<<<< HEAD
                     // pizzapi.Track.byPhone(
                     //     customer.phone,
                     //     function(pizzaData){
                     //         console.log(pizzaData);
                     //     }
                     // );
+=======
+>>>>>>> master
                 }
             );
 
@@ -199,6 +238,7 @@ function dealWithCustomer(response) {
         confirmation = false
     }
 }
+<<<<<<< HEAD
 
 function buildDM(idArr) {
     console.log('idArr', idArr);
@@ -228,5 +268,29 @@ function replaceAll(str1, str2, total, ignore) {
    return total.replace(new RegExp(str1.replace(/([\,\!\\\^\$\{\}\[\]\(\)\.\*\+\?\|\<\>\-\&])/g, function(c){return "\\" + c;}), "g"+(ignore?"i":"")), str2);
 };
 
+=======
+
+function buildDM(idArr) {
+    for (var i=0; i < idArr.length; i++) {
+        var dm = idArr[i].id;
+        var userId = idArr[i].user;
+        userIDObj[userId] = dm
+    }
+}
+
+//Pizza functions
+function nearbyStores(address, deliveryMethod){
+    pizzapi.Util.findNearbyStores(
+        address,
+        deliveryMethod,
+        function(storeData){
+            var storeID = storeData.result.Stores[0].StoreID;
+            var myStore = new pizzapi.Store({ID: storeID});
+            orderObj.storeID = storeID;
+            return myStore;
+        }
+    );
+}
+>>>>>>> master
 
 rtm.start();

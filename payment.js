@@ -32,6 +32,7 @@ mongoose.connect(process.env.MONGODB_URI)
 
 var models = require('./models/models')
 var Order = models.Order
+var PaymentPage = models.PaymentPage
 
 
 // DOMINOS SETUP
@@ -70,6 +71,19 @@ app.post('/payment/:slackId', function(req, res) {
             } else {
                 // console.log(savedOrder);
                 var orderObj = savedOrder[0].orderObj
+                console.log(savedOrder[0]);
+                var orderObj = savedOrder[0].orderObj
+                var codeArr = savedOrder[0].codeArr
+
+                var orderObj = new pizzapi.Order(orderObj)
+                for (var i=0; i < codeArr.length; i++) {
+                    orderObj.addItem(new pizzapi.Item({
+                            code: codeArr[i],
+                            options: [],
+                            quantity: 1
+                        })
+                    )
+                }
                 console.log('FROM DATABASE', orderObj);
                 var cardInfo = new orderObj.PaymentObject();
                 cardInfo.Amount = orderObj.Amounts.Customer;
@@ -116,6 +130,9 @@ app.post('/payment/:slackId', function(req, res) {
 app.get('/payment/:slackId', function(req, res) {
     var slackId = req.params.slackId
     res.render('payment', {slackId: slackId})
+    PaymentPage.findOne({ slackId: slackId }, function(err, foundPaymentPage) {
+        res.render('payment', {slackId: slackId, name: foundPaymentPage.firstName, foodArr: foundPaymentPage.foodArr})
+    })
 })
 
 app.get('/error', function(req, res) {
