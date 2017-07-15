@@ -7,7 +7,6 @@ var bot_token = process.env.SLACK_BOT_TOKEN;
 
 var rtm = new RtmClient(bot_token);
 
-
 // mongoose setup
 var mongoose = require('mongoose')
 mongoose.connection.on('error', function() {
@@ -17,11 +16,13 @@ mongoose.connection.on('connected', function() {
     console.log('Yay! Connected to database in bot.js')
 })
 mongoose.connect(process.env.MONGODB_URI)
-
 var models = require('./models/models')
 var Order = models.Order
 var PaymentPage = models.PaymentPage
 
+// api.ai setup
+var apiai = require('apiai');
+var axios = require('axios');
 
 
 var connected = false
@@ -41,6 +42,7 @@ var deliveryMethod;
 var myStore;
 var userIDObj = {};
 var route;
+var botParams = {} // address (gmaps), category (pizza, pasta, salads, wings), email, full name, phone #, size, type a.k.a descriptors
 
 // The client will emit an RTM.AUTHENTICATED event on successful connection, with the `rtm.start` payload
 rtm.on(CLIENT_EVENTS.RTM.AUTHENTICATED, (rtmStartData) => {
@@ -73,10 +75,13 @@ function dealWithCustomer(response) {
     if (response.text.toLowerCase().indexOf('pizzabot') >= 0 && connected) {
         route = userIDObj[response.user]
 
-        rtm.sendMessage("So you want to order a pizza, huh? What's your address?", route);
+        rtm.sendMessage("What's up?", route);
+        // rtm.sendMessage("So you want to order a pizza, huh? What's your address?", route);
         name = true
         connected = false
     } else if (name) {
+
+        // pass into api.ai, store valid (non-empty) return values in either customer (personal details) or
 
         var googleReturn = validateAddress(response.text).then(function(result) { // the argument to validateAddress should later be response.text or whatever Jens comes up with
             customer.address = new pizzapi.Address(result.split(', ').slice(0, 3).join(', ')) // address puts state as postal code...
