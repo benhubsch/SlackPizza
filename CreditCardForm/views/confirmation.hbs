@@ -7,13 +7,20 @@
 </head>
 
 <body>
-    <div class="body-text"></div>
     <form action="/payment/{{slackId}}" method="post">
         <div class="form-container">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/74/Dominos_pizza_logo.svg/220px-Dominos_pizza_logo.svg.png" alt="">
             <div class="personal-information" style="height: 541px">
-                <h1 style="padding-bottom: 40px;font-family: Arial, Helvetica, sans-serif; padding-top: 20px">Thank you for using the <p style="color: rgb(179, 0, 0);">DOMINATOR<p></h1>
-                <h2 style="color: rgb(169,169,169);font-family: Arial, Helvetica, sans-serif;">{{price}}Yo</h2><br>
-                <h2 style="color: rgb(169,169,169);font-family: Arial, Helvetica, sans-serif;">{{wait}}Hoe</h2>
+                <h1 style="color: rgb(221, 221, 221); padding-bottom: 30 px;font-family: Roboto; padding-top: 20px; font-size: 35px; animation: fadein 0.7s">Thank you for using <p style="font-size: 30px, animation: fadein 1.7s">the </p><p id="dominator" style="color: rgb(222, 41, 57); font-size: 55px; margin-bottom: 30px">DOMINATOR<p></h1>
+                <h2 style="color: rgb(25,25,112);font-family: Roboto; animation: fadein 5s; margin: 0">{{price}}You</h2><br>
+                <h2 style="color: rgb(25,25,112);font-family: Roboto; animation: fadein 5s">{{wait}}Hoe</h2>
+                <ul type="none">
+                    <li style="font-family: Roboto; color: rgb(222, 41, 57); animation: fadein 5s">
+                        <h3>item</h3></li>
+                    {{#each items}}
+                    <li style="font-family: Roboto; color: rgb(221, 41, 57); animation: fadein 5s"><h3>{{this}}item</h3></li>
+                    {{/each}}
+                </ul>
             </div> <!-- end of personal-information -->
 
         </form>

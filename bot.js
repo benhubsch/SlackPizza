@@ -24,6 +24,7 @@ var PaymentPage = models.PaymentPage
 
 // api.ai setup
 var apiai = require('apiai');
+var app = apiai(process.env.APIAI_CLI);
 
 var connected = false
 var address = false
@@ -44,11 +45,11 @@ var deliveryMethod;
 var myStore;
 var userIDObj = {};
 var route;
-var foodCodeArr;
-var foodNameArr;
+var foodCodeArr = [];
+var foodNameArr = [];
 
-var botParams = {'address': false, 'category': false, 'email': false, delivery: false, 'phone': false, 'type': false] // address (gmaps), category (pizza, pasta, salads, wings), email, full name, phone #, size, type a.k.a descriptors
-var lastPrompt; // the last key the bot prompted for
+var botParams = {'address': false, 'category': false, 'email': false, delivery: false, 'phone': false, 'type': false} // address (gmaps), category (pizza, pasta, salads, wings), email, full name, phone #, size, type a.k.a descriptors
+var lastPrompt = 'email'; // the last key the bot prompted for
 
 // The client will emit an RTM.AUTHENTICATED event on successful connection, with the `rtm.start` payload
 rtm.on(CLIENT_EVENTS.RTM.AUTHENTICATED, (rtmStartData) => {
@@ -95,109 +96,136 @@ function dealWithCustomer(response) {
             });
 
             request.on('response', function(response) {
-                return response.params
+                // console.log(response.result.parameters);
+                resolve(response.result.parameters)
             });
 
             request.on('error', function(error) {
-                return error;
+                console.log('error in promise reject');
+                reject(error)
             });
 
             request.end();
         })
+
         apiAI.then(function(response) {
             // methods that checks which response fields are empty, and sets booleans that are later executed (or not)
-            setBooleans(response)
+            for (var key in botParams) {
+                if (response[key]) {
+                    botParams[key] = response[key];
+                }
+            }
+
+
             rtm.sendMessage('What is your email?', route)
 
             return null
-        })
-        apiAI.catch(function(err) {
+        }).catch(function(err) {
             console.log('ERROR IN APIAI', err)
         })
 
         begin = false
         next = true
-
+        email = true
         console.log('bottom of APIAI');
+
         return null
 
     } else if (next) {
-        botParams.email = response.text.split('|')[1]
+        // var botParams = {'address': false, 'category': false, 'email': false, delivery: false, 'phone': false, 'type': false}
+
+
         if (! botParams.address) {
             botParams[lastPrompt] = response.text
 
             var addRes = ['Where should I deliver?', 'Where do you want it delivered?', 'Where ya at?'][Math.floor(Math.random() * 2)]
+            botParams.address = true;
             lastPrompt = 'address'
             rtm.sendMessage(addRes, route)
-        }
-        if (! botParams.category) {
+        } else if (! botParams.category) {
             botParams[lastPrompt] = response.text
 
             var ordRes = ['What are you feeling?', 'What makes you hungry?'][Math.floor(Math.random() * 2)]
             lastPrompt = 'category'
             botParams.type = true
+            botParams.category = true
             rtm.sendMessage(ordRes, route)
-        }
-        if (! botParams.delivery) {
+        } else if (! botParams.delivery) {
             botParams[lastPrompt] = response.text
 
             var delRes = ['Would you like this delivered or would you like to pick it up in person?', 'Will you be eating this at home or in store?'][Math.floor(Math.random() * 2)]
             lastPrompt = 'delivery'
-            botParams.type = true
+            botParams.delivery = true
             rtm.sendMessage(delRes, route)
-        }
-        if (! botParams.phone) {
+        } else if (! botParams.phone) {
             botParams[lastPrompt] = response.text
 
             var phoneRes = ['What is your number?', 'What are your digits?', 'What number can I holla at you with?'][Math.floor(Math.random() * 3)]
             lastPrompt = 'phone'
+            botParams.phone = true;
             rtm.sendMessage(phoneRes, route)
-        }
-
-        if (! botParams.phone) { botParams.phone = response.text }
-
-        var finalOrder;
-        if (typeof botParams.type === 'boolean') {
-            finalOrder = botParams.category
         } else {
-            finalOrder = botParams.type + ' ' + botParams.category
-        }
-
-        var googleReturn = validateAddress(botParams.address).then(function(result) { // the argument to validateAddress should later be response.text or whatever Jens comes up with
-            botParams.address = new pizzapi.Address(result.split(', ').slice(0, 3).join(', ')) // address puts state as postal code...
-
-            findNearby(botParams.address).then(function(menuNearest) {
-                var matchedItem = bestMatch(finalOrder, menuNearest)[0]
-
-                foodNameArr.push(matchedItem.Name)
-                foodCodeArr.push(matchedItem.Code)
-                return null
-            }).catch(function(err) {
-                console.log('ERROR IN findNearby', err);
-            })
-
-            return result
-        }).catch(function(err) {
-            console.log('Error in address fetch', err);
-        })
-
-        orderObj = {
-            storeID: nearbyStores(botParams.address, 'Delivery').StoreID
-            deliveryMethod: botParams.delivery // this may need to be formatted,
-            customer: {
-                    address: botParams.address,
-                    email: botParams.email,
-                    phone: botParams.phone
+            botParams.email = botParams.email.split('|')[1].substring(0, botParams.email.split('|')[1].length-1)
+            botParams.phone = response.text
+            var finalOrder;
+            if (typeof botParams.type === 'boolean') {
+                finalOrder = botParams.category
+            } else {
+                finalOrder = botParams.type + ' ' + botParams.category
             }
+
+            var googleReturn = validateAddress(botParams.address).then(function(result) { // the argument to validateAddress should later be response.text or whatever Jens comes up with
+                botParams.address = result.split(', ').slice(0, 3).join(', '); // address puts state as postal code...
+
+                findNearby(botParams.address).then(function(menuNearest) {
+                    var matchedItem = bestMatch(finalOrder, menuNearest)[0]
+
+                    foodNameArr.push(matchedItem.Name)
+                    foodCodeArr.push(matchedItem.Code)
+
+                    pizzapi.Util.findNearbyStores(
+                        botParams.address,
+                        deliveryMethod,
+                        function(storeData){
+                            var storeID = storeData.result.Stores[0].StoreID;
+
+                            orderObj = {
+                                storeID: parseInt(storeID),
+                                deliveryMethod: botParams.delivery, // this may need to be formatted,
+                                customer: {
+                                    address: new pizzapi.Address(botParams.address),
+                                    // address: new pizzapi.Address({
+                                    //     Street: "450 9th St.",
+                                    //     City: "San Francisco",
+                                    //     Region: "CA",
+                                    //     PostalCode: "94103"
+                                    // }),
+                                    email: botParams.email,
+                                    phone: botParams.phone
+                                }
+                            }
+
+                            rtm.sendMessage('These are your order details: ', route)
+                            rtm.sendMessage('Address: ' + botParams.address, route)
+                            rtm.sendMessage('Email: ' + orderObj.customer.email + ' Phone: ' + orderObj.customer.phone, route)
+                            rtm.sendMessage('Order: ' + foodNameArr[0] + ' Delivery Method: ' + orderObj.deliveryMethod, route)
+                            rtm.sendMessage('Can you confirm this order?', route)
+
+                            next = false
+
+                            return null
+                        }
+                    );
+
+                }).catch(function(err) {
+                    console.log('ERROR IN findNearby', err);
+                })
+
+                return result
+            }).catch(function(err) {
+                console.log('Error in address fetch', err);
+            })
         }
-
-        rtm.sendMessage('These are your order details: ', route)
-        rtm.sendMessage('Address: ' + orderObj.customer.address, route)
-        rtm.sendMessage('Email: ' + orderObj.customer.email + ' Phone: ' + orderObj.customer.phone, route)
-        rtm.sendMessage('Order: ' + foodNameArr[0] + ' Delivery Method: ' + orderObj.deliveryMethod, route)
-        rtm.sendMessage('Can you confirm this order?', route)
-
-        next = false
     } else {
         if (response.text.toLowerCase().indexOf('yes') >= 0) {
 
@@ -235,26 +263,26 @@ function buildDM(idArr) {
 }
 
 //Pizza functions
-function nearbyStores(address, deliveryMethod){
-    pizzapi.Util.findNearbyStores(
-        address,
-        deliveryMethod,
-        function(storeData){
-            var storeID = storeData.result.Stores[0].StoreID;
-            var myStore = new pizzapi.Store({ID: storeID});
-            orderObj.storeID = storeID;
-            return myStore;
-        }
-    );
-}
+// function nearbyStores(address, deliveryMethod){
+//     pizzapi.Util.findNearbyStores(
+//         address,
+//         deliveryMethod,
+//         function(storeData){
+//             var storeID = storeData.result.Stores[0].StoreID;
+//             console.log('storeID', storeID)
+//             return storeID;
+//         }
+//     );
+// }
 
 function setBooleans(jsonObj) {
-    var aiObj = jsonObj.parse()
+    var aiObj = jsonObj
     for (var key in botParams) {
-        if (botParams.hasOwnProperty(key) && aiObj.key !== '') {
+        if (aiObj.key !== '') {
             botParams = aiObj.key
         }
     }
+    return botParams
 }
 
 rtm.start();

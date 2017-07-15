@@ -6,7 +6,6 @@ function findNearby(address) {
             address, // this is super dang picky!
             'Delivery',
             function(storeData){
-                console.log(storeData);
                 var storeID = storeData.result.Stores[0];
                 var myStore = new pizzapi.Store({ID: storeID}); // note: this could all be wrong
                 myStore.ID = storeData.result.Stores[0].StoreID;
