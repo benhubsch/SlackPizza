@@ -29,6 +29,9 @@ var PaymentPage = models.PaymentPage
 var apiai = require('apiai');
 var app = apiai(process.env.APIAI_CLI);
 
+// email and phone extractors
+var extractor = require('phone-number-extractor');
+
 var connected = false
 var address = false
 var name = false
@@ -149,7 +152,9 @@ function dealWithCustomer(response) {
     } else if (next) {
 
         if (! botParams.address) {
-            botParams[lastPrompt] = response.text
+            var firstDex = response.text.indexOf(':');
+            var lastDex = response.text.indexOf('|');
+            botParams[lastPrompt] = response.text.substring(firstDex + 1, lastDex);
 
             var addRes = ['Where should I deliver?', 'Where do you want it delivered?', 'Where ya at?'][Math.floor(Math.random() * 2)]
             botParams.address = true;
@@ -178,8 +183,15 @@ function dealWithCustomer(response) {
             botParams.phone = true;
             rtm.sendMessage(phoneRes, route)
         } else {
-            botParams.email = botParams.email.split('|')[1].substring(0, botParams.email.split('|')[1].length-1)
-            botParams.phone = response.text
+            extractor.getCandidates(response.text, "US")
+                .then(function(res){
+                    console.log(res);
+                    botParams.phone = parseInt(res); // [ '0254123123' ]
+                })
+                .catch(function(err){
+                    throw err;
+                });
+
             var finalOrder;
             if (typeof botParams.type === 'boolean') {
                 finalOrder = botParams.category
@@ -273,6 +285,7 @@ function buildDM(idArr) {
         userIDObj[userId] = dm
     }
 }
+
 
 rtm.start();
 
