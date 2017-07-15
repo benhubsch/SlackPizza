@@ -1,9 +1,7 @@
 var pizzapi = require('dominos');
 var findBestMatches = require('./findBestMatches').findBestMatches;
 // var getMenuObj = require('./getMenuObj').findBestMatches;
-var request = require('./apiai').request;
-
-request('Hey');
+// var request = require('./apiai').request;
 
 var food = 'pasta';
 var menuObj;
@@ -18,10 +16,12 @@ pizzapi.Util.findNearbyStores(
     function(storeData){
         var storeID = storeData.result.Stores[0];
         var myStore = new pizzapi.Store({ID: storeID});
+        console.log('hihhihihihihihihihihihi', storeID.StoreID)
         myStore.ID = storeData.result.Stores[0].StoreID;
         myStore.getMenu(
             function(storeData){
                 menuObj = getMenuObj(storeData);
+                // console.log(menuObj);
                 findBestMatches(food, menuObj);
             }
         )
