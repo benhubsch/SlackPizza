@@ -118,9 +118,6 @@ app.post('/payment/:slackId', function(req, res) {
                     var waitMessage = orderObj.deliveryMethod === 'Delivery' ? 'Your food will be delivered in ' : 'Your food will be ready for pickup in '
                     var priceMessage = "Your total was: $" + result.result.Order.Amounts.Payment
                     var timeMessage = waitMessage + result.result.Order.EstimatedWaitMinutes + ' minutes'}
-                    catch(err){
-                        console.log(err);
-                    }
                     console.log('Order has been placed...', result);
                     console.log(result.result.Order.CorrectiveAction);
                     console.log(timeMessage);
