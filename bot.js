@@ -79,15 +79,29 @@ rtm.on(CLIENT_EVENTS.RTM.RTM_CONNECTION_OPENED, function () {
 });
 
 function dealWithCustomer(response) {
+    console.log(response);
 
     if (response.text.toLowerCase().indexOf('pizza') >= 0 && connected) {
-
         route = userIDObj[response.user]
+        console.log('inside first if');
+        Order.find({ slackId: response.user }, function(err, foundUser) {
+            if (err) {
+                console.log('error in error');
+            } else {
+                if (foundUser.length === 0) {
+                    rtm.sendMessage("What's up?", route);
+                    begin = true
+                    connected = false
+                } else {
+                    console.log(foundUser);
+                }
+            }
+        })
 
-        rtm.sendMessage("What's up?", route);
-        // rtm.sendMessage("So you want to order a pizza, huh? What's your address?", route);
-        begin = true
-        connected = false
+
+
+
+
     } else if (begin) {
 
         var apiAI = new Promise(function(resolve, reject) {
@@ -116,7 +130,6 @@ function dealWithCustomer(response) {
                     botParams[key] = response[key];
                 }
             }
-
 
             rtm.sendMessage('What is your email?', route)
 
@@ -237,7 +250,7 @@ function dealWithCustomer(response) {
                 }
             })
 
-            var newOrder = new Order({ slackId: response.user, codeArr: foodCodeArr, orderObj: orderObj })
+            var newOrder = new Order({ slackId: response.user, codeArr: foodCodeArr, foodNameArr: foodNameArr })
             newOrder.save(function(err, returnedOrder) {
                 if (err) {
                     console.log('error saving new order', err);
