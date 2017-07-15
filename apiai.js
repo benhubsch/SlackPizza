@@ -15,7 +15,7 @@ var apiai = require('apiai');
 var app = apiai(process.env.APIAI_CLI);
 
 var request = app.textRequest('I want pizza', {
-    sessionId: '<unique session id>'
+
 });
 
 request.on('response', function(response) {
