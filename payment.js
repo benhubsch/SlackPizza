@@ -59,7 +59,7 @@ app.post('/payment/:slackId', function(req, res) {
         res.redirect('/error')
     } else {
         var num = parseInt(req.body.number.split(' ').join(''))
-        var exp = req.body.expiry.split(' / ').join('')
+        var exp = String(req.body.expiry.split(' / ').join(''))
         var cvc = parseInt(req.body.cvc)
         var zip = parseInt(req.body.zip)
         var first = req.body.first // REMEMBER THAT CUSTOMER IS A NESTED OBJECT INSIDE ORDER.... DEAL WITH THAT
@@ -75,15 +75,20 @@ app.post('/payment/:slackId', function(req, res) {
                 var orderObj = savedOrder[0].orderObj
                 var codeArr = savedOrder[0].codeArr
 
+                orderObj.customer.firstName = first
+                orderObj.customer.lastName = last
+
                 var orderObj = new pizzapi.Order(orderObj)
                 for (var i=0; i < codeArr.length; i++) {
                     orderObj.addItem(new pizzapi.Item({
-                            code: codeArr[i],
+                            code: 'PINPASCA',
                             options: [],
                             quantity: 1
                         })
                     )
                 }
+                console.log(orderObj);
+
                 console.log('FROM DATABASE', orderObj);
                 var cardInfo = new orderObj.PaymentObject();
                 cardInfo.Amount = orderObj.Amounts.Customer;
@@ -107,19 +112,21 @@ app.post('/payment/:slackId', function(req, res) {
                     }
                 );
 
-                // orderObj.place(function(result) {
-                //     var waitMessage = deliveryMethod === 'Delivery' ? 'Your food will be delivered in ' : 'Your food will be ready for pickup in '
-                //     var priceMessage = "Total price came out to:" + result.result.Order.Amounts.Payment
-                //     var timeMessage = waitMessage + result.result.Order.EstimatedWaitMinutes + ' minutes'
-                //     console.log('Order has been placed...', result);
-                //         // pizzapi.Track.byPhone(
-                //         //     customer.phone,
-                //         //     function(pizzaData){
-                //         //         console.log(pizzaData);
-                //         //     }
-                //         // );
-                //     res.render('thanks', {wait: timeMessage, price: priceMessage})
-                // });
+                orderObj.place(function(result) {
+                    var waitMessage = orderObj.deliveryMethod === 'Delivery' ? 'Your food will be delivered in ' : 'Your food will be ready for pickup in '
+                    var priceMessage = "Total price came out to:" + result.result.Order.Amounts.Payment
+                    var timeMessage = waitMessage + result.result.Order.EstimatedWaitMinutes + ' minutes'
+                    console.log('Order has been placed...', result);
+                    console.log(result.result.Order.CorrectiveAction);
+                    console.log(timeMessage);
+                        // pizzapi.Track.byPhone(
+                        //     6264294446,
+                        //     function(pizzaData){
+                        //         console.log(pizzaData);
+                        //     }
+                        // );
+                    // res.render('thanks', {wait: timeMessage, price: priceMessage})
+                });
             }
         })
 
