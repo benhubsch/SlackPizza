@@ -22,8 +22,6 @@ var PaymentPage = models.PaymentPage
 
 // api.ai setup
 var apiai = require('apiai');
-var axios = require('axios');
-
 
 var connected = false
 var address = false
@@ -35,6 +33,7 @@ var phone = false
 var delivery = false
 var placeOrder = false
 var confirmation = false
+var begin = false
 
 var customer = {};
 var orderObj = {};
@@ -42,7 +41,9 @@ var deliveryMethod;
 var myStore;
 var userIDObj = {};
 var route;
-var botParams = {} // address (gmaps), category (pizza, pasta, salads, wings), email, full name, phone #, size, type a.k.a descriptors
+
+var botParams; // address (gmaps), category (pizza, pasta, salads, wings), email, full name, phone #, size, type a.k.a descriptors
+var lastPrompt; // the last key the bot prompted for
 
 // The client will emit an RTM.AUTHENTICATED event on successful connection, with the `rtm.start` payload
 rtm.on(CLIENT_EVENTS.RTM.AUTHENTICATED, (rtmStartData) => {
@@ -77,9 +78,55 @@ function dealWithCustomer(response) {
 
         rtm.sendMessage("What's up?", route);
         // rtm.sendMessage("So you want to order a pizza, huh? What's your address?", route);
-        name = true
+        begin = true
         connected = false
-    } else if (name) {
+    } else if (begin) {
+
+        var apiAI = new Promise(function(resolve, reject) {
+            var request = app.textRequest(response.text, {
+                sessionId: '123456789',
+                resetContexts: true
+            });
+
+            request.on('response', function(response) {
+                return response.params
+            });
+
+            request.on('error', function(error) {
+                return error;
+            });
+
+            request.end();
+        })
+        apiAI.then(function(response) {
+            // methods that checks which response fields are empty, and sets booleans that are later executed (or not)
+            setBooleans(response)
+
+            return null
+        })
+        apiAI.catch(function(err) {
+            console.log('ERROR IN APIAI', err)
+        })
+
+        begin = false
+    } else {
+        if (! address) {
+            botParams.lastPrompt = response.text
+
+            var addRes = ['Where should I deliver?', 'Where do you want it delivered?', 'Where ya at?'][Math.floor(Math.random() * 2)]
+            rtm.sendMessage(addRes, route)
+        }
+        if (! email) {
+            botParams.lastPrompt = response.text
+        }
+        if (! order)
+        if (! payment)
+        if (! phone)
+        if (! delivery)
+        if (! placeOrder)
+        if (! confirmation)
+    }
+
 
         // pass into api.ai, store valid (non-empty) return values in either customer (personal details) or
 
