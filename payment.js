@@ -62,6 +62,8 @@ app.post('/payment/:slackId', function(req, res) {
         var exp = req.body.expiry.split(' / ').join('')
         var cvc = parseInt(req.body.cvc)
         var zip = parseInt(req.body.zip)
+        var first = req.body.first // REMEMBER THAT CUSTOMER IS A NESTED OBJECT INSIDE ORDER.... DEAL WITH THAT
+        var last = req.body.last
 
         var slackId = req.params.slackId
 
@@ -116,7 +118,7 @@ app.post('/payment/:slackId', function(req, res) {
                 //         //         console.log(pizzaData);
                 //         //     }
                 //         // );
-                //     res.render('confirmation', {wait: timeMessage, price: priceMessage})
+                //     res.render('thanks', {wait: timeMessage, price: priceMessage})
                 // });
             }
         })
@@ -135,7 +137,7 @@ app.get('/error', function(req, res) {
     res.send('Something went wrong with your payment details; try again!')
 })
 app.get('/success', function(req, res) {
-    res.render('confirmation')
+    res.status(200).send('Head back to Slack, where you should type \"done\" to finish the process!')
 })
 
 
