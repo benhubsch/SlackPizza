@@ -119,12 +119,6 @@ app.post('/payment/:slackId', function(req, res) {
                     console.log('Order has been placed...', result);
                     console.log(result.result.Order.CorrectiveAction);
                     console.log(timeMessage);
-                        // pizzapi.Track.byPhone(
-                        //     6264294446,
-                        //     function(pizzaData){
-                        //         console.log(pizzaData);
-                        //     }
-                        // );
                     // res.render('thanks', {wait: timeMessage, price: priceMessage})
                 });
             }

@@ -1,9 +1,12 @@
 var RtmClient = require('@slack/client').RtmClient;
 var CLIENT_EVENTS = require('@slack/client').CLIENT_EVENTS;
+var RTM_EVENTS = require('@slack/client').RTM_EVENTS;
 var pizzapi = require('dominos');
 var validateAddress = require('./geocode').validateAddress
 var findNearby = require('./index').findNearby
 var bestMatch = require('./findBestMatches').findBestMatches
+
+console.log('@slack/client', require('@slack/client'));
 
 var bot_token = process.env.SLACK_BOT_TOKEN;
 
@@ -61,17 +64,15 @@ rtm.on(CLIENT_EVENTS.RTM.AUTHENTICATED, (rtmStartData) => {
     console.log(`Logged in as ${rtmStartData.self.name} of team ${rtmStartData.team.name}, but not yet connected to a route`);
 });
 
-rtm.on(CLIENT_EVENTS.RTM.RAW_MESSAGE, function (response) {
-    response = JSON.parse(response)
-
+rtm.on(RTM_EVENTS.MESSAGE, function(response) {
     if (response.type !== 'message' || response.user === 'U677DRHT5') return; // response.user === bot's id
 
     dealWithCustomer(response)
 });
 
-
 // you need to wait for the client to fully connect before you can send messages
 rtm.on(CLIENT_EVENTS.RTM.RTM_CONNECTION_OPENED, function () {
+    console.log('client', CLIENT_EVENTS);
     rtm.sendMessage("Here I am, fam!", route);
 
     connected = true
@@ -79,7 +80,7 @@ rtm.on(CLIENT_EVENTS.RTM.RTM_CONNECTION_OPENED, function () {
 
 function dealWithCustomer(response) {
 
-    if (response.text.toLowerCase().indexOf('pizzabot') >= 0 && connected) {
+    if (response.text.toLowerCase().indexOf('pizza') >= 0 && connected) {
 
         route = userIDObj[response.user]
 
