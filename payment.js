@@ -32,6 +32,7 @@ mongoose.connect(process.env.MONGODB_URI)
 
 var models = require('./models/models')
 var Order = models.Order
+var PaymentPage = models.PaymentPage
 
 
 // DOMINOS SETUP
@@ -68,8 +69,19 @@ app.post('/payment/:slackId', function(req, res) {
             if (err) {
                 console.log('error in find by slacKId', err);
             } else {
-                // console.log(savedOrder);
+                console.log(savedOrder[0]);
                 var orderObj = savedOrder[0].orderObj
+                var codeArr = savedOrder[0].codeArr
+
+                var orderObj = new pizzapi.Order(orderObj)
+                for (var i=0; i < codeArr.length; i++) {
+                    orderObj.addItem(new pizzapi.Item({
+                            code: codeArr[i],
+                            options: [],
+                            quantity: 1
+                        })
+                    )
+                }
                 console.log('FROM DATABASE', orderObj);
                 var cardInfo = new orderObj.PaymentObject();
                 cardInfo.Amount = orderObj.Amounts.Customer;
@@ -92,7 +104,6 @@ app.post('/payment/:slackId', function(req, res) {
                         console.log("Order has been priced...");
                     }
                 );
-                console.log(orderObj);
 
                 // orderObj.place(function(result) {
                 //     var waitMessage = deliveryMethod === 'Delivery' ? 'Your food will be delivered in ' : 'Your food will be ready for pickup in '
@@ -115,7 +126,9 @@ app.post('/payment/:slackId', function(req, res) {
 
 app.get('/payment', function(req, res) {
     var slackId = req.params.slackId
-    res.render('payment', {slackId: slackId})
+    PaymentPage.findOne({ slackId: slackId }, function(err, foundPaymentPage) {
+        res.render('payment', {slackId: slackId, name: foundPaymentPage.firstName, foodArr: foundPaymentPage.foodArr})
+    })
 })
 
 app.get('/error', function(req, res) {

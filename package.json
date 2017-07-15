@@ -24,6 +24,8 @@
     "express-validator": "^3.2.1",
     "mongoose": "^4.11.2",
     "slack-client": "^2.0.6",
+    "sort-array": "^2.0.0",
+    "string-similarity": "^1.2.0",
     "underscore": "^1.8.3"
   }
 }
