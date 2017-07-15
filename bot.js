@@ -2,6 +2,8 @@ var RtmClient = require('@slack/client').RtmClient;
 var CLIENT_EVENTS = require('@slack/client').CLIENT_EVENTS;
 var pizzapi = require('dominos');
 var validateAddress = require('./geocode').validateAddress
+var findNearby = require('./index').findNearby
+var bestMatch = require('./findBestMatches').findBestMatches
 
 var bot_token = process.env.SLACK_BOT_TOKEN;
 
@@ -34,6 +36,7 @@ var delivery = false
 var placeOrder = false
 var confirmation = false
 var begin = false
+var next = false
 
 var customer = {};
 var orderObj = {};
@@ -41,8 +44,10 @@ var deliveryMethod;
 var myStore;
 var userIDObj = {};
 var route;
+var foodCodeArr;
+var foodNameArr;
 
-var botParams; // address (gmaps), category (pizza, pasta, salads, wings), email, full name, phone #, size, type a.k.a descriptors
+var botParams = {'address': false, 'category': false, 'email': false, delivery: false, 'phone': false, 'type': false] // address (gmaps), category (pizza, pasta, salads, wings), email, full name, phone #, size, type a.k.a descriptors
 var lastPrompt; // the last key the bot prompted for
 
 // The client will emit an RTM.AUTHENTICATED event on successful connection, with the `rtm.start` payload
@@ -74,6 +79,7 @@ rtm.on(CLIENT_EVENTS.RTM.RTM_CONNECTION_OPENED, function () {
 function dealWithCustomer(response) {
 
     if (response.text.toLowerCase().indexOf('pizzabot') >= 0 && connected) {
+
         route = userIDObj[response.user]
 
         rtm.sendMessage("What's up?", route);
@@ -101,6 +107,7 @@ function dealWithCustomer(response) {
         apiAI.then(function(response) {
             // methods that checks which response fields are empty, and sets booleans that are later executed (or not)
             setBooleans(response)
+            rtm.sendMessage('What is your email?', route)
 
             return null
         })
@@ -109,131 +116,113 @@ function dealWithCustomer(response) {
         })
 
         begin = false
-    } else {
-        if (! address) {
-            botParams.lastPrompt = response.text
+        next = true
+
+        console.log('bottom of APIAI');
+        return null
+
+    } else if (next) {
+        botParams.email = response.text.split('|')[1]
+        if (! botParams.address) {
+            botParams[lastPrompt] = response.text
 
             var addRes = ['Where should I deliver?', 'Where do you want it delivered?', 'Where ya at?'][Math.floor(Math.random() * 2)]
+            lastPrompt = 'address'
             rtm.sendMessage(addRes, route)
         }
-        if (! email) {
-            botParams.lastPrompt = response.text
+        if (! botParams.category) {
+            botParams[lastPrompt] = response.text
+
+            var ordRes = ['What are you feeling?', 'What makes you hungry?'][Math.floor(Math.random() * 2)]
+            lastPrompt = 'category'
+            botParams.type = true
+            rtm.sendMessage(ordRes, route)
         }
-        if (! order)
-        if (! payment)
-        if (! phone)
-        if (! delivery)
-        if (! placeOrder)
-        if (! confirmation)
-    }
+        if (! botParams.delivery) {
+            botParams[lastPrompt] = response.text
 
+            var delRes = ['Would you like this delivered or would you like to pick it up in person?', 'Will you be eating this at home or in store?'][Math.floor(Math.random() * 2)]
+            lastPrompt = 'delivery'
+            botParams.type = true
+            rtm.sendMessage(delRes, route)
+        }
+        if (! botParams.phone) {
+            botParams[lastPrompt] = response.text
 
-        // pass into api.ai, store valid (non-empty) return values in either customer (personal details) or
+            var phoneRes = ['What is your number?', 'What are your digits?', 'What number can I holla at you with?'][Math.floor(Math.random() * 3)]
+            lastPrompt = 'phone'
+            rtm.sendMessage(phoneRes, route)
+        }
 
-        var googleReturn = validateAddress(response.text).then(function(result) { // the argument to validateAddress should later be response.text or whatever Jens comes up with
-            customer.address = new pizzapi.Address(result.split(', ').slice(0, 3).join(', ')) // address puts state as postal code...
-            rtm.sendMessage("Great! What is your first and last name?", route)
-            delivery = true
-            name = false
+        if (! botParams.phone) { botParams.phone = response.text }
+
+        var finalOrder;
+        if (typeof botParams.type === 'boolean') {
+            finalOrder = botParams.category
+        } else {
+            finalOrder = botParams.type + ' ' + botParams.category
+        }
+
+        var googleReturn = validateAddress(botParams.address).then(function(result) { // the argument to validateAddress should later be response.text or whatever Jens comes up with
+            botParams.address = new pizzapi.Address(result.split(', ').slice(0, 3).join(', ')) // address puts state as postal code...
+
+            findNearby(botParams.address).then(function(menuNearest) {
+                var matchedItem = bestMatch(finalOrder, menuNearest)[0]
+
+                foodNameArr.push(matchedItem.Name)
+                foodCodeArr.push(matchedItem.Code)
+                return null
+            }).catch(function(err) {
+                console.log('ERROR IN findNearby', err);
+            })
 
             return result
         }).catch(function(err) {
             console.log('Error in address fetch', err);
         })
 
-        return null
-
-    } else if (delivery) {
-        customer.firstName = response.text.split(' ')[0]
-        customer.lastName = response.text.split(' ')[1]
-        rtm.sendMessage("Type d for delivery or c for carryout", route)
-        email = true
-        delivery = false
-    } else if (email) { // possibly contained in customer info
-        orderObj.deliveryMethod = response.text === 'c' ? 'Carryout' : 'Delivery';
-        myStore = nearbyStores(customer.address, order.deliveryMethod); // storeID is stored in orderObj
-        rtm.sendMessage("Thanks, " + customer.firstName + "! What is your email?", route)
-        phone = true
-        email = false
-    } else if (phone) { // possibly contained in customer info
-        var emailString = response.text.split('|')[1]
-        customer.email = emailString.substring(0, emailString.length - 1)
-        rtm.sendMessage("Aaaaand what are your digits " + customer.firstName + "? :kissing_heart:", route)
-        order = true
-        phone = false
-    } else if (order) { // possibly contained in customer info
-        var phoneString = response.text
-        customer.phone = phoneString
-        rtm.sendMessage("What would you like to order?", route)
-        orderObj.customer = customer;
-        payment = true
-        order = false
-    } else if (payment) {
-        // orderObj.code = response.text
-        // integrate Spike's menu comparison here
-        var codeArr = ['S_PIZPH', 'S_PIZZA']
-
-        var newPaymentPage = new PaymentPage({ slackId: response.user, foodArr: ['Pepperoni Pizza', 'BBQ Wings'], firstName: customer.firstName})
-        newPaymentPage.save(function(err) {
-            if (err) {
-                console.log('error saving new payment page', err);
+        orderObj = {
+            storeID: nearbyStores(botParams.address, 'Delivery').StoreID
+            deliveryMethod: botParams.delivery // this may need to be formatted,
+            customer: {
+                    address: botParams.address,
+                    email: botParams.email,
+                    phone: botParams.phone
             }
-        })
-
-        var newOrder = new Order({ slackId: response.user, codeArr: codeArr, orderObj: orderObj })
-        newOrder.save(function(err, returnedOrder) {
-            if (err) {
-                console.log('error saving new order', err);
-            } else {
-                rtm.sendMessage("Sounds delicious! Click this link to confirm credit card details: http://localhost:3000/payment/" + response.user, route)
-
-                placeOrder = true
-                payment = false
-            }
-        })
-
-    } else if (placeOrder) {
-
-        var cardInfo = new orderObj.PaymentObject();
-        cardInfo.Amount = orderObj.Amounts.Customer;
-        cardInfo.Number = cardObj.num;
-        cardInfo.CardType = orderObj.validateCC();
-        cardInfo.Expiration = cardObj.exp; // possibly a string?
-        cardInfo.SecurityCode = cardObj.sec;
-        cardInfo.PostalCode = cardObj.zip; // Billing Zipcode
-
-        console.log("Adding card to order...");
-        orderObj.Payments.push(cardInfo);
-
-        rtm.sendMessage("Do you want to place your order? (y) or (n)", route)
-        confirmation = true
-        placeOrder = false
-    } else if (confirmation) {
-        if(response.text === 'y'){
-            orderObj.validate(function(result) {
-                    console.log("Order has been validated...");
-                }
-            );
-
-            orderObj.price(function(result) {
-                    console.log("Order has been priced...");
-                }
-            );
-
-            orderObj.place(function(result) {
-                var waitMessage = deliveryMethod === 'Delivery' ? 'Your food will be delivered in ' : 'Your food will be ready for pickup in '
-                rtm.sendMessage("Total price came out to:" + result.result.Order.Amounts.Payment, route)
-                rtm.sendMessage(waitMessage + result.result.Order.EstimatedWaitMinutes + ' minutes', route)
-                rtm.sendMessage('Thanks for ordering with us! We hope you order again soon! :heart: ', route)
-                console.log('Order has been placed...', result);
-                }
-            );
-
-            rtm.sendMessage("Congratulations! You just ordered Dominos!", route)
-        } else {
-            orderObj = {};
         }
-        confirmation = false
+
+        rtm.sendMessage('These are your order details: ', route)
+        rtm.sendMessage('Address: ' + orderObj.customer.address, route)
+        rtm.sendMessage('Email: ' + orderObj.customer.email + ' Phone: ' + orderObj.customer.phone, route)
+        rtm.sendMessage('Order: ' + foodNameArr[0] + ' Delivery Method: ' + orderObj.deliveryMethod, route)
+        rtm.sendMessage('Can you confirm this order?', route)
+
+        next = false
+    } else {
+        if (response.text.toLowerCase().indexOf('yes') >= 0) {
+
+            var newPaymentPage = new PaymentPage({ slackId: response.user })
+            newPaymentPage.save(function(err) {
+                if (err) {
+                    console.log('error saving new payment page', err);
+                }
+            })
+
+            var newOrder = new Order({ slackId: response.user, codeArr: foodCodeArr, orderObj: orderObj })
+            newOrder.save(function(err, returnedOrder) {
+                if (err) {
+                    console.log('error saving new order', err);
+                } else {
+                    rtm.sendMessage("Sounds delicious! Click this link to confirm credit card details: http://localhost:3000/payment/" + response.user, route)
+
+                    placeOrder = true
+                    payment = false
+                }
+            })
+
+        } else {
+            rtm.sendMessage("Oh no! You're going to have to start again :(", route)
+        }
     }
 }
 
@@ -259,4 +248,118 @@ function nearbyStores(address, deliveryMethod){
     );
 }
 
+function setBooleans(jsonObj) {
+    var aiObj = jsonObj.parse()
+    for (var key in botParams) {
+        if (botParams.hasOwnProperty(key) && aiObj.key !== '') {
+            botParams = aiObj.key
+        }
+    }
+}
+
 rtm.start();
+
+
+
+
+    // // menu parsing w/ Spike
+    // // prompt for delivery method
+    //
+    //
+    //
+    //     return null
+    //
+    // } else if (delivery) {
+    //     customer.firstName = response.text.split(' ')[0]
+    //     customer.lastName = response.text.split(' ')[1]
+    //     rtm.sendMessage("Type d for delivery or c for carryout", route)
+    //     email = true
+    //     delivery = false
+    // } else if (email) { // possibly contained in customer info
+    //     orderObj.deliveryMethod = response.text === 'c' ? 'Carryout' : 'Delivery';
+    //     myStore = nearbyStores(customer.address, order.deliveryMethod); // storeID is stored in orderObj
+    //     rtm.sendMessage("Thanks, " + customer.firstName + "! What is your email?", route)
+    //     phone = true
+    //     email = false
+    // } else if (phone) { // possibly contained in customer info
+    //     var emailString = response.text.split('|')[1]
+    //     customer.email = emailString.substring(0, emailString.length - 1)
+    //     rtm.sendMessage("Aaaaand what are your digits " + customer.firstName + "? :kissing_heart:", route)
+    //     order = true
+    //     phone = false
+    // } else if (order) { // possibly contained in customer info
+    //     var phoneString = response.text
+    //     customer.phone = phoneString
+    //     rtm.sendMessage("What would you like to order?", route)
+    //     orderObj.customer = customer;
+    //     payment = true
+    //     order = false
+    // } else if (payment) {
+    //     // orderObj.code = response.text
+    //     // integrate Spike's menu comparison here
+    //     var codeArr = ['S_PIZPH', 'S_PIZZA']
+    //
+    //     var newPaymentPage = new PaymentPage({ slackId: response.user, foodArr: ['Pepperoni Pizza', 'BBQ Wings'], firstName: customer.firstName})
+    //     newPaymentPage.save(function(err) {
+    //         if (err) {
+    //             console.log('error saving new payment page', err);
+    //         }
+    //     })
+    //
+    //     var newOrder = new Order({ slackId: response.user, codeArr: codeArr, orderObj: orderObj })
+    //     newOrder.save(function(err, returnedOrder) {
+    //         if (err) {
+    //             console.log('error saving new order', err);
+    //         } else {
+    //             rtm.sendMessage("Sounds delicious! Click this link to confirm credit card details: http://localhost:3000/payment/" + response.user, route)
+    //
+    //             placeOrder = true
+    //             payment = false
+    //         }
+    //     })
+    //
+    // } else if (placeOrder) {
+    //
+    //     var cardInfo = new orderObj.PaymentObject();
+    //     cardInfo.Amount = orderObj.Amounts.Customer;
+    //     cardInfo.Number = cardObj.num;
+    //     cardInfo.CardType = orderObj.validateCC();
+    //     cardInfo.Expiration = cardObj.exp; // possibly a string?
+    //     cardInfo.SecurityCode = cardObj.sec;
+    //     cardInfo.PostalCode = cardObj.zip; // Billing Zipcode
+    //
+    //     console.log("Adding card to order...");
+    //     orderObj.Payments.push(cardInfo);
+    //
+    //     rtm.sendMessage("Do you want to place your order? (y) or (n)", route)
+    //     confirmation = true
+    //     placeOrder = false
+    // } else if (confirmation) {
+    //     if(response.text === 'y'){
+    //         orderObj.validate(function(result) {
+    //                 console.log("Order has been validated...");
+    //             }
+    //         );
+    //
+    //         orderObj.price(function(result) {
+    //                 console.log("Order has been priced...");
+    //             }
+    //         );
+    //
+    //         orderObj.place(function(result) {
+    //             var waitMessage = deliveryMethod === 'Delivery' ? 'Your food will be delivered in ' : 'Your food will be ready for pickup in '
+    //             rtm.sendMessage("Total price came out to:" + result.result.Order.Amounts.Payment, route)
+    //             rtm.sendMessage(waitMessage + result.result.Order.EstimatedWaitMinutes + ' minutes', route)
+    //             rtm.sendMessage('Thanks for ordering with us! We hope you order again soon! :heart: ', route)
+    //             console.log('Order has been placed...', result);
+    //             }
+    //         );
+    //
+    //         rtm.sendMessage("Congratulations! You just ordered Dominos!", route)
+    //     } else {
+    //         orderObj = {};
+    //     }
+    //     confirmation = false
+
+
+

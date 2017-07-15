@@ -129,7 +129,7 @@ app.post('/payment/:slackId', function(req, res) {
 app.get('/payment/:slackId', function(req, res) {
     var slackId = req.params.slackId
     PaymentPage.findOne({ slackId: slackId }, function(err, foundPaymentPage) {
-        res.render('payment', {slackId: slackId, name: foundPaymentPage.firstName, foodArr: foundPaymentPage.foodArr}) //won't be able to render first name here, possibly username
+        res.render('payment', { slackId: slackId }) //won't be able to render first name here, possibly username
     })
 })
 
