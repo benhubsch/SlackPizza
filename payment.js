@@ -41,7 +41,7 @@ var pizzapi = require('dominos');
 
 
 app.get('/', function(req, res) {
-    res.status(200).send('Hello world!')
+    res.redirect('/error')
 })
 
 var cardObj = {}
@@ -70,6 +70,7 @@ app.post('/payment/:slackId', function(req, res) {
         Order.find({ slackId: slackId }, function(err, savedOrder) {
             if (err) {
                 console.log('error in find by slacKId', err);
+                res.redirect('/error')
             } else {
                 console.log(savedOrder[0]);
                 var orderObj = savedOrder[0].orderObj
@@ -119,7 +120,7 @@ app.post('/payment/:slackId', function(req, res) {
                     console.log('Order has been placed...', result);
                     console.log(result.result.Order.CorrectiveAction);
                     console.log(timeMessage);
-                    // res.render('thanks', {wait: timeMessage, price: priceMessage})
+                    res.render('confirmation', {wait: timeMessage, price: priceMessage})
                 });
             }
         })
