@@ -2,9 +2,9 @@ var apiai = require('apiai');
 
 var app = apiai(process.env.APIAI_CLI);
 
-var request = app.textRequest(input, {
+var request = app.textRequest('I want pizza', {
 
-})
+});
 
 request.on('response', function(response) {
     console.log(response);

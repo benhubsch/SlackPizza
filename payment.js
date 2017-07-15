@@ -116,7 +116,7 @@ app.post('/payment/:slackId', function(req, res) {
                 //         //         console.log(pizzaData);
                 //         //     }
                 //         // );
-                //     res.render('thanks', {wait: timeMessage, price: priceMessage})
+                //     res.render('confirmation', {wait: timeMessage, price: priceMessage})
                 // });
             }
         })
@@ -124,7 +124,7 @@ app.post('/payment/:slackId', function(req, res) {
     }
 })
 
-app.get('/payment/:slackId', function(req, res) {
+app.get('/payment', function(req, res) {
     var slackId = req.params.slackId
     PaymentPage.findOne({ slackId: slackId }, function(err, foundPaymentPage) {
         res.render('payment', {slackId: slackId, name: foundPaymentPage.firstName, foodArr: foundPaymentPage.foodArr})
@@ -135,7 +135,7 @@ app.get('/error', function(req, res) {
     res.send('Something went wrong with your payment details; try again!')
 })
 app.get('/success', function(req, res) {
-    res.status(200).send('Head back to Slack, where you should type \"done\" to finish the process!')
+    res.render('confirmation')
 })
 
 
