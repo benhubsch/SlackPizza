@@ -137,7 +137,7 @@ app.get('/error', function(req, res) {
     res.send('Something went wrong with your payment details; try again!')
 })
 app.get('/success', function(req, res) {
-    res.status(200).send('Head back to Slack, where you should type \"done\" to finish the process!')
+    res.render('confirmation')
 })
 
 
