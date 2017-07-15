@@ -1,7 +1,31 @@
 @import url(https://fonts.googleapis.com/css?family=Roboto:400,900,700,500);
 
+@keyframes fadein {
+    0% {
+        opacity: 0;
+    }
+    66% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+#dominator {
+    color: rgb(179, 0, 0);
+    font-size: 50px;
+    animation: fadein 3.7s !important;
+}
+
+img {
+    height: 64px;
+    width: 64px;
+
+}
+
 body {
-  padding: 60px 0px;
+  padding: 7px 0px;
   background-color: #B2D1E5;
   margin: 0 auto;
   width: 600px;
@@ -117,4 +141,5 @@ input[type="submit"]:hover{
   }
   #input-button {
     width: 100%;
+  }
   }
