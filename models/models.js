@@ -3,13 +3,15 @@ var mongoose = require('mongoose')
 var Order = mongoose.model('Order', {
     slackId: String,
     codeArr: Array,
-    orderObj: Object
+    orderObj: Object,
+    foodNameArr: Array
 })
 
 var PaymentPage = mongoose.model('PaymentPage', {
     slackId: String,
     firstName: String,
-    foodArr: Array
+    foodCodeArr: Array,
+    foodNameArr: Array
 })
 
 module.exports = ({
