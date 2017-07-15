@@ -13,16 +13,6 @@
         <div class="form-container">
             <div class="personal-information">
                 <h1>Payment Information</h1>
-    <div style="text-align: center">
-        <strong>Food Cart</strong>
-        {{#each foodArr}}
-        <div style="color: white; text-align: center">{{this}}</div>
-        {{/each}}
-    </div>
-    <form action="/payment/{{slackId}}" method="post">
-        <div class="form-container">
-            <div class="personal-information">
-                <h1>{{name}}'s Payment Information</h1>
             </div> <!-- end of personal-information -->
             <div class="card-wrapper"></div>
             <input id="column-left" type="text" name="first" placeholder="First Name"/>

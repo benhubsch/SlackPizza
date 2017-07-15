@@ -62,6 +62,8 @@ app.post('/payment/:slackId', function(req, res) {
         var exp = req.body.expiry.split(' / ').join('')
         var cvc = parseInt(req.body.cvc)
         var zip = parseInt(req.body.zip)
+        var first = req.body.first // REMEMBER THAT CUSTOMER IS A NESTED OBJECT INSIDE ORDER.... DEAL WITH THAT
+        var last = req.body.last
 
         var slackId = req.params.slackId
 
@@ -131,7 +133,7 @@ app.get('/payment/:slackId', function(req, res) {
     var slackId = req.params.slackId
     res.render('payment', {slackId: slackId})
     PaymentPage.findOne({ slackId: slackId }, function(err, foundPaymentPage) {
-        res.render('payment', {slackId: slackId, name: foundPaymentPage.firstName, foodArr: foundPaymentPage.foodArr})
+        res.render('payment', {slackId: slackId})
     })
 })
 

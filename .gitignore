@@ -58,6 +58,7 @@ typings/
 
 # dotenv environment variables file
 .env
+env.sh
 
 # private user info
 config.js
