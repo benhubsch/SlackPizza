@@ -20,6 +20,7 @@ mongoose.connect(process.env.MONGODB_URI)
 
 var models = require('./models/models')
 var Order = models.Order
+var PaymentPage = models.PaymentPage
 
 
 
@@ -70,7 +71,6 @@ rtm.on(CLIENT_EVENTS.RTM.RTM_CONNECTION_OPENED, function () {
 function dealWithCustomer(response) {
 
     if (response.text.toLowerCase().indexOf('pizzabot') >= 0 && connected) {
-        // console.log(response);
         route = userIDObj[response.user]
 
         rtm.sendMessage("So you want to order a pizza, huh? What's your address?", route);
@@ -114,29 +114,21 @@ function dealWithCustomer(response) {
         customer.phone = phoneString
         rtm.sendMessage("What would you like to order?", route)
         orderObj.customer = customer;
-        // orderObj = new pizzapi.Order(orderObj);
         payment = true
         order = false
     } else if (payment) {
         // orderObj.code = response.text
-        // push everything onto an array
-        orderObj.addItem(new pizzapi.Item(
-            {
-                code: 'S_PIZPH',
-                options: [],
-                quantity: 1
-            }
-        ))
+        // integrate Spike's menu comparison here
+        var codeArr = ['S_PIZPH', 'S_PIZZA']
 
-        orderObj.addItem(new pizzapi.Item(
-            {
-                code: 'S_PIZZA',
-                options: [],
-                quantity: 1
+        var newPaymentPage = new PaymentPage({ slackId: response.user, foodArr: ['Pepperoni Pizza', 'BBQ Wings'], firstName: customer.firstName})
+        newPaymentPage.save(function(err) {
+            if (err) {
+                console.log('error saving new payment page', err);
             }
-        ))
-        console.log('ORIGINAL', orderObj);
-        var newOrder = new Order({ slackId: response.user, orderObj: orderObj })
+        })
+
+        var newOrder = new Order({ slackId: response.user, codeArr: codeArr, orderObj: orderObj })
         newOrder.save(function(err, returnedOrder) {
             if (err) {
                 console.log('error saving new order', err);
@@ -164,7 +156,6 @@ function dealWithCustomer(response) {
         rtm.sendMessage("Do you want to place your order? (y) or (n)", route)
         confirmation = true
         placeOrder = false
-        // console.log(orderObj);
     } else if (confirmation) {
         if(response.text === 'y'){
             orderObj.validate(function(result) {
@@ -183,12 +174,6 @@ function dealWithCustomer(response) {
                 rtm.sendMessage(waitMessage + result.result.Order.EstimatedWaitMinutes + ' minutes', route)
                 rtm.sendMessage('Thanks for ordering with us! We hope you order again soon! :heart: ', route)
                 console.log('Order has been placed...', result);
-                    // pizzapi.Track.byPhone(
-                    //     customer.phone,
-                    //     function(pizzaData){
-                    //         console.log(pizzaData);
-                    //     }
-                    // );
                 }
             );
 
@@ -201,13 +186,11 @@ function dealWithCustomer(response) {
 }
 
 function buildDM(idArr) {
-    console.log('idArr', idArr);
     for (var i=0; i < idArr.length; i++) {
         var dm = idArr[i].id;
         var userId = idArr[i].user;
         userIDObj[userId] = dm
     }
-    console.log(userIDObj);
 }
 
 //Pizza functions
@@ -223,10 +206,5 @@ function nearbyStores(address, deliveryMethod){
         }
     );
 }
-
-function replaceAll(str1, str2, total, ignore) {
-   return total.replace(new RegExp(str1.replace(/([\,\!\\\^\$\{\}\[\]\(\)\.\*\+\?\|\<\>\-\&])/g, function(c){return "\\" + c;}), "g"+(ignore?"i":"")), str2);
-};
-
 
 rtm.start();
