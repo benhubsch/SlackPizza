@@ -124,7 +124,8 @@ app.post('/payment/:slackId', function(req, res) {
                     console.log('Order has been placed...', result);
                     console.log(result.result.Order.CorrectiveAction);
                     console.log(timeMessage);
-                    res.render('confirmation', {wait: timeMessage, price: priceMessage})
+                    // res.render('confirmation', {wait: timeMessage, price: priceMessage})
+                    res.render('confirmation', {wait: 'Your food will be delivered in 17-23 minutes.', price: 'Your total was $13.72.'})
                 });
             }
         })
