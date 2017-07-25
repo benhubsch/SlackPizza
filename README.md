@@ -20,7 +20,11 @@ Additionally, we had an added of challenge of having to run an Express.js server
 
 ## Demo
 
+Let's say I'm the project lead on a team, and I want to reward my coworkers for workind hard the past couple weeks with a Friday afternoon pizza party. I can make the Dominator application listen to me from anywhere inside my Slack channel by typing an order, which it will understand and being a conversation, asking me for information that I did not provide. It is possible to provide more than just order information when I invoke the bot -- I could also give it my phone number, email, and home address if I wanted to knock it out in one fell swoop. We've illustrated the step-by-step process here for clarity.
+
 ![alt text](https://github.com/benhubsch/SlackPizza/blob/master/pics/slack.png "In Slack")
+
+Note a couple of things: for starters, I say I want a pepperoni pizza. The application runs keywords that the api.ai entity picks out of my request -- most likely "pepperoni" and "pizza" -- and runs those keywords through an algorithm that matches to Dominos menu items behind the scenes. It came up with Ultimate Pepperoni as the dish that would suit me best. Not bad! The application was also able to pick my phone number and email out of otherwise perfectly normal English sentences. Lastly, I gave it a really poorly formatted address, and the application was able to churn out a gorgeous, nicely formatted address that will ultimately be passed on to Dominos (1412 Market san fran --> 
 
 ![alt text](https://github.com/benhubsch/SlackPizza/blob/master/pics/payment.png "Payment Details")
 
