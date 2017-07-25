@@ -20,11 +20,11 @@ Additionally, we had an added of challenge of having to run an Express.js server
 
 ## Demo
 
-![alt text](https://github.com/benhubsch/SlackPizza/blob/master/pics/slack.png "Opening an editor")
+![alt text](https://github.com/benhubsch/SlackPizza/blob/master/pics/slack.png "In Slack")
 
-![alt text](https://github.com/benhubsch/SlackPizza/blob/master/pics/payment.png "Opening an editor")
+![alt text](https://github.com/benhubsch/SlackPizza/blob/master/pics/payment.png "Payment Details")
 
-![alt text](https://github.com/benhubsch/SlackPizza/blob/master/pics/final.png "Opening an editor")
+![alt text](https://github.com/benhubsch/SlackPizza/blob/master/pics/final.png "Order confirmation")
 
 
 ## Contributing
