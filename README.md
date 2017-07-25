@@ -33,7 +33,7 @@ Each of the fields that I fill out are validated to ensure that they are non-emp
 Lastly, the most enjoyable step: my order is complete! I can see how much I spent, and how long I can expect to wait until Dominos is able to deliver to my apartment.
 ![alt text](https://github.com/benhubsch/SlackPizza/blob/master/pics/final.png "Order confirmation")
 
-If you have any doubts as to whether this actually works, it does! I suppose you'll have to take my word for it. Unless, of course, your stomach starts to grumble, and you can't help but be a little bit curious if the code we wrote actually works, and you fork it and place an order.
+If you have any doubts as to whether this actually works, it does! I suppose you'll have to take my word for it. Unless, of course, your stomach starts to grumble, and you can't help but be a little bit curious if the code we wrote actually runs, and you fork it and place an order.
 
 ## Contributing
 
