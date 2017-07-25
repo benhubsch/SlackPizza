@@ -28,7 +28,7 @@ Note a couple of things: for starters, I say I want a pepperoni pizza. The api.a
 
 I am then forwarded to a link that contains a page where I can enter my credit card information. Slack does not support sending forms through direct messages, nor would it be ideal to put credit card info in-line as a regular message, so the most secure option is to link to an external form:
 ![alt text](https://github.com/benhubsch/SlackPizza/blob/master/pics/payment.png "Payment Details")
-Each of the fields that I fill out are validated to ensure that they are non-empty, contain the correct type, and are plausible credit card details. The UI automatically changes color and autofills your credit company if it is well known.
+Each of the fields that I fill out are validated to ensure that they are non-empty and contain the correct type. The UI automatically changes color and autofills your credit card company if it is a common provider.
 
 Lastly, the most enjoyable step: my order is complete! I can see how much I spent, and how long I can expect to wait until Dominos is able to deliver to my apartment.
 ![alt text](https://github.com/benhubsch/SlackPizza/blob/master/pics/final.png "Order confirmation")
