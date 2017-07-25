@@ -24,7 +24,7 @@ Let's say I'm the project lead on a team, and I want to reward my coworkers for 
 
 ![alt text](https://github.com/benhubsch/SlackPizza/blob/master/pics/slack.png "In Slack")
 
-Note a couple of things: for starters, I say I want a pepperoni pizza. The application runs keywords that the api.ai entity picks out of my request -- most likely "pepperoni" and "pizza" -- and runs those keywords through an algorithm that matches to Dominos menu items behind the scenes. It came up with Ultimate Pepperoni as the dish that would suit me best. Not bad! The application was also able to pick my phone number and email out of otherwise perfectly normal English sentences. Lastly, I gave it a really poorly formatted address, and the application was able to churn out a gorgeous, nicely formatted address that will ultimately be passed on to Dominos (1412 Market san fran --> 
+Note a couple of things: for starters, I say I want a pepperoni pizza. The application runs keywords that the api.ai entity picks out of my request -- most likely "pepperoni" and "pizza" -- and runs those keywords through an algorithm that matches to Dominos menu items behind the scenes. It came up with Ultimate Pepperoni as the dish that would suit me best. Not bad! The application was also able to pick my phone number and email out of otherwise perfectly normal English sentences. Lastly, I gave it a really poorly formatted address, and the application was able to churn out a gorgeous, nicely formatted address that will ultimately be passed on to Dominos (1412 Market san fran --> 1412 Market St., San Francisco CA 94103
 
 ![alt text](https://github.com/benhubsch/SlackPizza/blob/master/pics/payment.png "Payment Details")
 
